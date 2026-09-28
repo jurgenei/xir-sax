@@ -1,4 +1,4 @@
-package name.jurgenei.xml.sexpr;
+package name.jurgenei.xir;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * SAX content handler that writes bracket-based S-expression representation.
  */
-public final class SExpressionSerializer implements ContentHandler, LexicalHandler {
+public final class XirSerializer implements ContentHandler, LexicalHandler {
     private final Writer writer;
     private final Deque<NodeFrame> stack = new ArrayDeque<>();
     private final List<NamespaceDecl> pendingNamespaceDeclarations = new ArrayList<>();
@@ -51,7 +51,7 @@ public final class SExpressionSerializer implements ContentHandler, LexicalHandl
      *
      * @param writer destination writer
      */
-    public SExpressionSerializer(Writer writer) {
+    public XirSerializer(Writer writer) {
         this(writer, OutputFormat.COMPACT, SyntaxMode.CANONICAL);
     }
 
@@ -61,7 +61,7 @@ public final class SExpressionSerializer implements ContentHandler, LexicalHandl
      * @param writer destination writer
      * @param format requested rendering mode; defaults to compact when {@code null}
      */
-    public SExpressionSerializer(Writer writer, OutputFormat format) {
+    public XirSerializer(Writer writer, OutputFormat format) {
         this(writer, format, SyntaxMode.CANONICAL);
     }
 
@@ -72,7 +72,7 @@ public final class SExpressionSerializer implements ContentHandler, LexicalHandl
      * @param format rendering mode
      * @param syntaxMode syntax compatibility mode
      */
-    public SExpressionSerializer(Writer writer, OutputFormat format, SyntaxMode syntaxMode) {
+    public XirSerializer(Writer writer, OutputFormat format, SyntaxMode syntaxMode) {
         this.writer = writer;
         this.format = format == null ? OutputFormat.COMPACT : format;
         this.syntaxMode = syntaxMode == null ? SyntaxMode.CANONICAL : syntaxMode;
@@ -727,10 +727,10 @@ public final class SExpressionSerializer implements ContentHandler, LexicalHandl
             }
         }
         String effectiveUri = uri == null ? "" : uri;
-        if (SExpressionParser.INTERNAL_XDM_URI.equals(effectiveUri)) {
+        if (XirParser.INTERNAL_XDM_URI.equals(effectiveUri)) {
             return internalKindByLocal(name);
         }
-        if (qName != null && qName.startsWith(SExpressionParser.INTERNAL_XDM_PREFIX + ":")) {
+        if (qName != null && qName.startsWith(XirParser.INTERNAL_XDM_PREFIX + ":")) {
             return internalKindByLocal(name);
         }
         return NodeKind.ELEMENT;

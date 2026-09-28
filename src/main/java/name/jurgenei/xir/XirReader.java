@@ -1,4 +1,4 @@
-package name.jurgenei.xml.sexpr;
+package name.jurgenei.xir;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
@@ -20,9 +20,9 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 /**
- * XMLReader facade over {@link SExpressionParser}.
+ * XMLReader facade over {@link XirParser}.
  */
-public final class SExpressionXmlReader implements XMLReader {
+public final class XirReader implements XMLReader {
     private static final String FEATURE_NAMESPACES = "http://xml.org/sax/features/namespaces";
     private static final String FEATURE_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
     private static final String FEATURE_VALIDATION = "http://xml.org/sax/features/validation";
@@ -31,7 +31,7 @@ public final class SExpressionXmlReader implements XMLReader {
     private static final String PROPERTY_LEXICAL_HANDLER = "http://xml.org/sax/properties/lexical-handler";
     private static final String PROPERTY_DECLARATION_HANDLER = "http://xml.org/sax/properties/declaration-handler";
 
-    private final SExpressionParser parser = new SExpressionParser();
+    private final XirParser parser = new XirParser();
 
     private ContentHandler contentHandler = new DefaultHandler();
     private DTDHandler dtdHandler;
@@ -43,7 +43,7 @@ public final class SExpressionXmlReader implements XMLReader {
     /**
      * Creates XMLReader facade for S-expression input.
      */
-    public SExpressionXmlReader() {
+    public XirReader() {
     }
 
     @Override

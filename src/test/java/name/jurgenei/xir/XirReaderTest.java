@@ -1,8 +1,7 @@
-package name.jurgenei.xml.sexpr;
+package name.jurgenei.xir;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -19,11 +18,11 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-public class SExpressionXmlReaderTest {
+public class XirReaderTest {
 
     @Test
     public void reportsSupportedAndUnsupportedFeatures() throws Exception {
-        SExpressionXmlReader reader = new SExpressionXmlReader();
+        XirReader reader = new XirReader();
 
         Assert.assertTrue(reader.getFeature("http://xml.org/sax/features/namespaces"));
         Assert.assertFalse(reader.getFeature("http://xml.org/sax/features/namespace-prefixes"));
@@ -35,7 +34,7 @@ public class SExpressionXmlReaderTest {
 
     @Test
     public void acceptsAndRejectsFeatureValues() throws Exception {
-        SExpressionXmlReader reader = new SExpressionXmlReader();
+        XirReader reader = new XirReader();
 
         reader.setFeature("http://xml.org/sax/features/namespaces", true);
         reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
@@ -51,7 +50,7 @@ public class SExpressionXmlReaderTest {
 
     @Test
     public void storesSupportedProperties() throws Exception {
-        SExpressionXmlReader reader = new SExpressionXmlReader();
+        XirReader reader = new XirReader();
         LexicalHandler lexical = new RecordingHandler();
         Object declaration = new Object();
 
@@ -67,7 +66,7 @@ public class SExpressionXmlReaderTest {
 
     @Test
     public void keepsHandlersAndDefaultsContentHandler() {
-        SExpressionXmlReader reader = new SExpressionXmlReader();
+        XirReader reader = new XirReader();
 
         EntityResolver entityResolver = (publicId, systemId) -> null;
         DTDHandler dtdHandler = new DefaultHandler();
@@ -86,27 +85,27 @@ public class SExpressionXmlReaderTest {
 
     @Test
     public void parsesFromCharacterByteAndSystemIdSources() throws Exception {
-        String sexpr = "(. (! \"c\") (book { id \"b1\" } (title \"XML\")))";
+        String xir = "(. (! \"c\") (book { id \"b1\" } (title \"XML\")))";
 
-        SExpressionXmlReader fromChars = new SExpressionXmlReader();
+        XirReader fromChars = new XirReader();
         RecordingHandler charsHandler = new RecordingHandler();
         fromChars.setContentHandler(charsHandler);
         fromChars.setProperty("http://xml.org/sax/properties/lexical-handler", charsHandler);
-        fromChars.parse(new InputSource(new StringReader(sexpr)));
+        fromChars.parse(new InputSource(new StringReader(xir)));
         Assert.assertTrue(charsHandler.sawStartBook);
         Assert.assertTrue(charsHandler.sawComment);
 
-        SExpressionXmlReader fromBytes = new SExpressionXmlReader();
+        XirReader fromBytes = new XirReader();
         RecordingHandler bytesHandler = new RecordingHandler();
         fromBytes.setContentHandler(bytesHandler);
-        fromBytes.parse(new InputSource(new ByteArrayInputStream(sexpr.getBytes(StandardCharsets.UTF_8))));
+        fromBytes.parse(new InputSource(new ByteArrayInputStream(xir.getBytes(StandardCharsets.UTF_8))));
         Assert.assertTrue(bytesHandler.sawStartBook);
 
-        File temp = File.createTempFile("sexpr-reader", ".sexpr");
-        Files.writeString(temp.toPath(), sexpr, StandardCharsets.UTF_8);
+        File temp = File.createTempFile("xir-reader", ".xir");
+        Files.writeString(temp.toPath(), xir, StandardCharsets.UTF_8);
         temp.deleteOnExit();
 
-        SExpressionXmlReader fromSystemId = new SExpressionXmlReader();
+        XirReader fromSystemId = new XirReader();
         RecordingHandler fileHandler = new RecordingHandler();
         fromSystemId.setContentHandler(fileHandler);
         fromSystemId.parse(temp.toURI().toString());
@@ -115,7 +114,7 @@ public class SExpressionXmlReaderTest {
 
     @Test
     public void failsWithoutCharacterByteOrSystemId() {
-        SExpressionXmlReader reader = new SExpressionXmlReader();
+        XirReader reader = new XirReader();
         IOException error = Assert.assertThrows(IOException.class,
             () -> reader.parse(new InputSource()));
         Assert.assertTrue(error.getMessage().contains("requires character stream, byte stream, or systemId"));

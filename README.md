@@ -23,15 +23,15 @@ name.jurgenei:xir-sax:<version>
 
 ## Namespace
 
-- Java package: `name.jurgenei.xml.sexpr`
+- Java package: `name.jurgenei.xir`
 - Internal XDM bridge namespace URI: `urn:name.jurgenei.xml:xdm`
 - Internal XDM bridge prefix: `xdm`
 
 ## Included APIs
 
-- `SExpressionParser` - parses S-expression input into SAX events
-- `SExpressionSerializer` - renders SAX events as canonical or legacy S-expression
-- `SExpressionXmlReader` - `XMLReader` facade over parser
+- `XirParser` - parses S-expression input into SAX events
+- `XirSerializer` - renders SAX events as canonical or legacy S-expression
+- `XirReader` - `XMLReader` facade over parser
 
 ## Canonical syntax excerpt
 

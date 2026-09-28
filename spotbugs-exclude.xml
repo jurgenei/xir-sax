@@ -3,21 +3,21 @@
     <!-- Add project-specific suppressions only after manual verification. -->
     <!-- SAX API exposes handlers by contract. -->
     <Match>
-        <Class name="name.jurgenei.xml.sexpr.SExpressionXmlReader"/>
+        <Class name="name.jurgenei.xirXirReader"/>
         <Method name="getContentHandler"/>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
 
     <!-- Writer comes from caller-managed stream contract. -->
     <Match>
-        <Class name="name.jurgenei.xml.sexpr.SExpressionSerializer"/>
+        <Class name="name.jurgenei.xirXirSerializer"/>
         <Method name="&lt;init&gt;"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <!-- XMLReader InputSource systemId resolution needed for standard external URI support. -->
     <Match>
-        <Class name="name.jurgenei.xml.sexpr.SExpressionXmlReader"/>
+        <Class name="name.jurgenei.xirXirReader"/>
         <Method name="openReader"/>
         <Bug pattern="URLCONNECTION_SSRF_FD"/>
     </Match>

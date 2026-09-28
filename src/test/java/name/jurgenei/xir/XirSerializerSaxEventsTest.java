@@ -1,4 +1,4 @@
-package name.jurgenei.xml.sexpr;
+package name.jurgenei.xir;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -6,15 +6,15 @@ import org.xml.sax.helpers.AttributesImpl;
 
 import java.io.StringWriter;
 
-public class SExpressionSerializerSaxEventsTest {
+public class XirSerializerSaxEventsTest {
 
     @Test
     public void serializesFromDirectSaxEventsAndCoversInternalKinds() throws Exception {
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(
+        XirSerializer serializer = new XirSerializer(
             writer,
-            SExpressionSerializer.OutputFormat.BEAUTIFIED,
-            SExpressionSerializer.SyntaxMode.CANONICAL
+            name.jurgenei.xir.XirSerializer.OutputFormat.BEAUTIFIED,
+            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
         );
 
         serializer.setDocumentLocator(null);

@@ -1,9 +1,8 @@
-package name.jurgenei.xml.sexpr;
+package name.jurgenei.xir;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -13,7 +12,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SExpressionFormatTest {
+public class XirFormatTest {
 
     @Test
     public void parsesCanonicalSyntaxWithNamespacesCommentsAndPi() throws Exception {
@@ -28,7 +27,7 @@ public class SExpressionFormatTest {
             """;
 
         RecordingHandler handler = new RecordingHandler();
-        new SExpressionParser().parse(new StringReader(input), handler, handler);
+        new XirParser().parse(new StringReader(input), handler, handler);
 
         Assert.assertTrue(handler.events.contains("spm:m=http://www.w3.org/1998/Math/MathML"));
         Assert.assertTrue(handler.events.contains("start:m:math:id=b1,version=1.0"));
@@ -48,8 +47,8 @@ public class SExpressionFormatTest {
             """;
 
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(writer, SExpressionSerializer.OutputFormat.COMPACT);
-        new SExpressionParser().parse(new StringReader(input), serializer, serializer);
+        XirSerializer serializer = new XirSerializer(writer, name.jurgenei.xir.XirSerializer.OutputFormat.COMPACT);
+        new XirParser().parse(new StringReader(input), serializer, serializer);
 
         String output = writer.toString();
         Assert.assertTrue(output.contains("{id \"b1\" version \"1.0\"}"));
@@ -60,7 +59,7 @@ public class SExpressionFormatTest {
     public void rejectsLegacyAtAttributeSyntax() {
         String input = "(book (@id \"b1\") (title \"XML\"))";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertNotNull(error.getMessage());
     }
 
@@ -79,7 +78,7 @@ public class SExpressionFormatTest {
             """;
 
         RecordingHandler handler = new RecordingHandler();
-        new SExpressionParser().parse(new StringReader(input), handler, handler);
+        new XirParser().parse(new StringReader(input), handler, handler);
 
         Assert.assertTrue(handler.events.contains("comment:lead comment"));
         Assert.assertTrue(handler.events.contains("spm:m=urn:math"));
@@ -101,8 +100,8 @@ public class SExpressionFormatTest {
             """;
 
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(writer, SExpressionSerializer.OutputFormat.COMPACT);
-        new SExpressionParser().parse(new StringReader(input), serializer, serializer);
+        XirSerializer serializer = new XirSerializer(writer, name.jurgenei.xir.XirSerializer.OutputFormat.COMPACT);
+        new XirParser().parse(new StringReader(input), serializer, serializer);
 
         String output = writer.toString();
         Assert.assertTrue(output.contains("(xdm:map {data (xdm:map {name \"John\" age 42})})"));
@@ -114,7 +113,7 @@ public class SExpressionFormatTest {
     public void rejectsBareSequenceBlockAsNode() {
         String input = "(book [\"A\" \"B\"])";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("xdm:array"));
     }
 
@@ -128,12 +127,12 @@ public class SExpressionFormatTest {
             """;
 
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(
+        XirSerializer serializer = new XirSerializer(
             writer,
-            SExpressionSerializer.OutputFormat.COMPACT,
-            SExpressionSerializer.SyntaxMode.CANONICAL
+            name.jurgenei.xir.XirSerializer.OutputFormat.COMPACT,
+            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
         );
-        new SExpressionParser().parse(new StringReader(input), serializer, serializer);
+        new XirParser().parse(new StringReader(input), serializer, serializer);
 
         String output = writer.toString();
         Assert.assertTrue(output.contains("(! \"lead comment\")"));
@@ -150,16 +149,16 @@ public class SExpressionFormatTest {
             """;
 
         RecordingHandler handler = new RecordingHandler();
-        new SExpressionParser().parse(new StringReader(input), handler, handler);
+        new XirParser().parse(new StringReader(input), handler, handler);
         Assert.assertTrue(handler.events.stream().anyMatch(event -> event.startsWith("start:xdm:xml-decl:version=1.0,encoding=UTF-8")));
 
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(
+        XirSerializer serializer = new XirSerializer(
             writer,
-            SExpressionSerializer.OutputFormat.COMPACT,
-            SExpressionSerializer.SyntaxMode.CANONICAL
+            name.jurgenei.xir.XirSerializer.OutputFormat.COMPACT,
+            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
         );
-        new SExpressionParser().parse(new StringReader(input), serializer, serializer);
+        new XirParser().parse(new StringReader(input), serializer, serializer);
 
         String output = writer.toString();
         Assert.assertTrue(output.contains("{version \"1.0\" encoding \"UTF-8\"}"));
@@ -169,7 +168,7 @@ public class SExpressionFormatTest {
     public void rejectsMapWithMissingValue() {
         String input = "(book { id })";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("Unexpected end of input") || error.getMessage().contains("Value token missing"));
     }
 
@@ -177,7 +176,7 @@ public class SExpressionFormatTest {
     public void rejectsArrayWithMissingClosingBracket() {
         String input = "(book (xdm:array [\"A\" \"B\"))";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("Unexpected end of input while parsing array")
             || error.getMessage().contains("Expected ')'")
             || error.getMessage().contains("Value token missing"));
@@ -187,7 +186,7 @@ public class SExpressionFormatTest {
     public void rejectsTypedAtomicWithoutValue() {
         String input = "(book (xs:boolean))";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("Typed atomic value missing") || error.getMessage().contains("Unexpected end of input"));
     }
 
@@ -195,7 +194,7 @@ public class SExpressionFormatTest {
     public void rejectsPiMapWithNonAtomicValue() {
         String input = "(?xml-stylesheet { href { nested \"x\" } })";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("must be atomic"));
     }
 
@@ -203,7 +202,7 @@ public class SExpressionFormatTest {
     public void rejectsTopLevelAssociativeBlockWithoutNodeHead() {
         String input = "{ key \"value\" }";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("Associative block must be attached to a node head"));
     }
 
@@ -211,7 +210,7 @@ public class SExpressionFormatTest {
     public void rejectsXdmMapWithoutAssociativePayload() {
         String input = "(xdm:map \"oops\")";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("xdm:map requires associative payload block"));
     }
 
@@ -219,7 +218,7 @@ public class SExpressionFormatTest {
     public void rejectsAssociativeBlockAfterStructuredChildren() {
         String input = "(book (title \"x\") { id \"b1\" })";
         IOException error = Assert.assertThrows(IOException.class,
-            () -> new SExpressionParser().parse(new StringReader(input), new DefaultHandler()));
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
         Assert.assertTrue(error.getMessage().contains("allowed only before child nodes"));
     }
 

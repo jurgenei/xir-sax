@@ -1,4 +1,4 @@
-package name.jurgenei.xml.sexpr;
+package name.jurgenei.xir;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-public class SExpressionSerializerCoverageTest {
+public class XirSerializerCoverageTest {
 
     @Test
     public void rendersLegacyModeShapesWhenRequested() throws Exception {
@@ -19,13 +19,13 @@ public class SExpressionSerializerCoverageTest {
             """;
 
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(
+        XirSerializer serializer = new XirSerializer(
             writer,
-            SExpressionSerializer.OutputFormat.BEAUTIFIED,
-            SExpressionSerializer.SyntaxMode.LEGACY
+            name.jurgenei.xir.XirSerializer.OutputFormat.BEAUTIFIED,
+            name.jurgenei.xir.XirSerializer.SyntaxMode.LEGACY
         );
 
-        new SExpressionParser().parse(new StringReader(input), serializer, serializer);
+        new XirParser().parse(new StringReader(input), serializer, serializer);
         String output = writer.toString();
 
         Assert.assertTrue(output.contains("[id \"b1\"]"));
@@ -37,10 +37,10 @@ public class SExpressionSerializerCoverageTest {
     @Test
     public void rendersEmptyCanonicalDocumentWhenNoEvents() throws Exception {
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(
+        XirSerializer serializer = new XirSerializer(
             writer,
-            SExpressionSerializer.OutputFormat.BEAUTIFIED,
-            SExpressionSerializer.SyntaxMode.CANONICAL
+            name.jurgenei.xir.XirSerializer.OutputFormat.BEAUTIFIED,
+            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
         );
 
         serializer.startDocument();
@@ -52,10 +52,10 @@ public class SExpressionSerializerCoverageTest {
     @Test
     public void keepsRawPiDataWhenNotTokenized() throws Exception {
         StringWriter writer = new StringWriter();
-        SExpressionSerializer serializer = new SExpressionSerializer(
+        XirSerializer serializer = new XirSerializer(
             writer,
-            SExpressionSerializer.OutputFormat.COMPACT,
-            SExpressionSerializer.SyntaxMode.CANONICAL
+            name.jurgenei.xir.XirSerializer.OutputFormat.COMPACT,
+            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
         );
 
         serializer.startDocument();
