@@ -1,4 +1,4 @@
-# Architecture Overview xml-sax-sexpr
+# Architecture Overview xir-sax
 
 ```mermaid
 flowchart TD
@@ -8,7 +8,7 @@ flowchart TD
     end
 
     subgraph group_engine["Parsing Engine"]
-        node_parser["S-Expression Parser"]
+        node_parser["Xir Parser"]
         node_syntax_model["Syntax and XDM Model"]
         node_event_emission["SAX Event Emission"]
     end
@@ -18,9 +18,9 @@ flowchart TD
     end
 
     node_application(("Application"))
-    node_sexpr_input(("S-Expression Input"))
+    node_sexpr_input(("Xir Input"))
     node_sax_consumer(("SAX Consumer"))
-    node_sexpr_output(("S-Expression Output"))
+    node_sexpr_output(("Xir Output"))
 
     node_application -->|"invokes"| node_xml_reader
     node_application -->|"configures"| node_serializer
@@ -32,11 +32,11 @@ flowchart TD
     node_event_emission -->|"emits events"| node_sax_consumer
     node_serializer -->|"writes"| node_sexpr_output
 
-    click node_xml_reader "https://github.com/jurgenei/xml-sax-sexpr/blob/main/src/main/java/name/jurgenei/xml/sexpr/SExpressionXmlReader.java"
-    click node_parser "https://github.com/jurgenei/xml-sax-sexpr/blob/main/src/main/java/name/jurgenei/xml/sexpr/SExpressionParser.java"
-    click node_syntax_model "https://github.com/jurgenei/xml-sax-sexpr/blob/main/src/main/java/name/jurgenei/xml/sexpr/SExpressionParser.java"
-    click node_event_emission "https://github.com/jurgenei/xml-sax-sexpr/blob/main/src/main/java/name/jurgenei/xml/sexpr/SExpressionParser.java"
-    click node_serializer "https://github.com/jurgenei/xml-sax-sexpr/blob/main/src/main/java/name/jurgenei/xml/sexpr/SExpressionSerializer.java"
+    click node_xml_reader "https://github.com/jurgenei/xir-sax/blob/main/src/main/java/name/jurgenei/xir/XirReader.java"
+    click node_parser "https://github.com/jurgenei/xir-sax/blob/main/src/main/java/name/jurgenei/xir/XirParser.java"
+    click node_syntax_model "https://github.com/jurgenei/xir-sax/blob/main/src/main/java/name/jurgenei/xir/XirExpressionParser.java"
+    click node_event_emission "https://github.com/jurgenei/xir-sax/blob/main/src/main/java/name/jurgenei/xir/XirParser.java"
+    click node_serializer "https://github.com/jurgenei/xir-sax/blob/main/src/main/java/name/jurgenei/xir/XirSerializer.java"
 
     classDef toneNeutral fill:#f8fafc,stroke:#334155,stroke-width:1.5px,color:#0f172a
     classDef toneBlue fill:#dbeafe,stroke:#2563eb,stroke-width:1.5px,color:#172554
