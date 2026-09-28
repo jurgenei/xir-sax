@@ -41,12 +41,12 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            artifactId = "xml-sax-sexpr"
+            artifactId = "xir-sax"
 
             pom {
-                name.set("xml-sax-sexpr")
+                name.set("xir-sax")
                 description.set("SAX parser/serializer and XMLReader for bracket-based XML/XDM S-expressions")
-                url.set("https://github.com/jurgenei/xml-sax-sexpr")
+                url.set("https://github.com/jurgenei/xir-sax")
 
                 licenses {
                     license {
@@ -63,9 +63,9 @@ publishing {
                 }
 
                 scm {
-                    connection.set("scm:git:https://github.com/jurgenei/xml-sax-sexpr.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/jurgenei/xml-sax-sexpr.git")
-                    url.set("https://github.com/jurgenei/xml-sax-sexpr")
+                    connection.set("scm:git:https://github.com/jurgenei/xir-sax.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/jurgenei/xir-sax.git")
+                    url.set("https://github.com/jurgenei/xir-sax")
                 }
             }
         }
@@ -153,10 +153,10 @@ tasks.named("check") {
 val stageCentralBundleRepo by tasks.registering(Sync::class) {
     dependsOn(tasks.named("publishMavenJavaPublicationToMavenLocal"))
 
-    val artifactBaseDir = file("${System.getProperty("user.home")}/.m2/repository/name/jurgenei/xml-sax-sexpr")
+    val artifactBaseDir = file("${System.getProperty("user.home")}/.m2/repository/name/jurgenei/xir-sax")
     val artifactVersionDir = file("$artifactBaseDir/${project.version}")
     from(artifactVersionDir)
-    into(layout.buildDirectory.dir("central-staging-repo/name/jurgenei/xml-sax-sexpr/${project.version}"))
+    into(layout.buildDirectory.dir("central-staging-repo/name/jurgenei/xir-sax/${project.version}"))
 
     doFirst {
         if (!artifactVersionDir.exists()) {
@@ -171,7 +171,7 @@ val generateCentralBundleChecksums by tasks.registering {
 
     doLast {
         val stagedVersionDir = layout.buildDirectory
-            .dir("central-staging-repo/name/jurgenei/xml-sax-sexpr/${project.version}")
+            .dir("central-staging-repo/name/jurgenei/xir-sax/${project.version}")
             .get()
             .asFile
 
@@ -203,7 +203,7 @@ val generateCentralBundleChecksums by tasks.registering {
 
 tasks.register<Zip>("packageCentralBundle") {
     dependsOn(generateCentralBundleChecksums)
-    archiveBaseName.set("xml-sax-sexpr")
+    archiveBaseName.set("xir-sax")
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("central-bundle")
     destinationDirectory.set(layout.buildDirectory.dir("central-bundle"))
