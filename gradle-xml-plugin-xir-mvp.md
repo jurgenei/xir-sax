@@ -22,9 +22,9 @@ Only implement lossless S-expression serialization/deserialization and Gradle in
 ### Read
 
 ```text
-.sexpr
+.xir
    ↓
-SExpressionParser
+xiressionParser
    ↓
 SAXSource
    ↓
@@ -36,9 +36,9 @@ Saxon
 ```text
 Saxon XDM
      ↓
-SExpressionSerializer
+xiressionSerializer
      ↓
-.sexpr
+.xir
 ```
 
 ---
@@ -99,7 +99,7 @@ S-expression
 
 ## Java Components
 
-### SExpressionParser
+### xiressionParser
 
 Input:
 
@@ -114,38 +114,38 @@ SAX events.
 Public API:
 
 ```java
-class SExpressionParser {
+class xiressionParser {
     void parse(Reader reader, ContentHandler handler);
 }
 ```
 
 ---
 
-### SExpressionXmlReader
+### xiressionXmlReader
 
 Adapter from parser to SAXSource.
 
 ```java
-class SExpressionXmlReader implements XMLReader
+class xiressionXmlReader implements XMLReader
 ```
 
 Usage:
 
 ```java
 Source source = new SAXSource(
-    new SExpressionXmlReader(),
+    new xiressionXmlReader(),
     new InputSource(reader)
 );
 ```
 
 ---
 
-### SExpressionSerializer
+### xiressionSerializer
 
 Consumes SAX events.
 
 ```java
-class SExpressionSerializer
+class xiressionSerializer
     implements ContentHandler
 ```
 
@@ -166,7 +166,7 @@ Output:
 ```kotlin
 enum class XmlDocumentType {
     XML,
-    SEXPR
+    xir
 }
 ```
 
@@ -178,20 +178,20 @@ Allow:
 
 ```kotlin
 xslt {
-    input.set(file("input.sexpr"))
+    input.set(file("input.xir"))
 }
 ```
 
 When extension is:
 
 ```text
-.sexpr
+.xir
 ```
 
 create:
 
 ```java
-SAXSource(SExpressionXmlReader)
+SAXSource(xiressionXmlReader)
 ```
 
 instead of XML parser.
@@ -204,20 +204,20 @@ Allow:
 
 ```kotlin
 xslt {
-    output.set(file("output.sexpr"))
+    output.set(file("output.xir"))
 }
 ```
 
 When extension is:
 
 ```text
-.sexpr
+.xir
 ```
 
 attach:
 
 ```java
-SExpressionSerializer
+xiressionSerializer
 ```
 
 instead of XML serializer.
@@ -231,11 +231,11 @@ Roundtrip succeeds:
 ```text
 input.xml
    ↓
-xmlToSexpr
+xmlToxir
    ↓
-a.sexpr
+a.xir
    ↓
-sexprToXml
+xirToXml
    ↓
 b.xml
 ```
@@ -254,9 +254,9 @@ No semantic loss.
 
 ## Deliverables
 
-1. SExpressionParser
-2. SExpressionXmlReader
-3. SExpressionSerializer
+1. xiressionParser
+2. xiressionXmlReader
+3. xiressionSerializer
 4. Gradle file-extension based Source selection
 5. Gradle file-extension based Result selection
 6. Roundtrip integration test

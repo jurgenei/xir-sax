@@ -23,7 +23,7 @@ name.jurgenei:xir-sax:<version>
 
 ## Namespace
 
-- Java package: `name.jurgenei.xml.sexpr`
+- Java package: `name.jurgenei.xir`
 - Internal XDM bridge namespace URI: `urn:name.jurgenei.xml:xdm`
 - Internal XDM bridge prefix: `xdm`
 
