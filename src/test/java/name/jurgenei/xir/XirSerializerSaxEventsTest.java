@@ -1,5 +1,6 @@
 package name.jurgenei.xir;
 
+import name.jurgenei.xir.XirSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xml.sax.helpers.AttributesImpl;
@@ -13,8 +14,8 @@ public class XirSerializerSaxEventsTest {
         StringWriter writer = new StringWriter();
         XirSerializer serializer = new XirSerializer(
             writer,
-            name.jurgenei.xir.XirSerializer.OutputFormat.BEAUTIFIED,
-            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
+            XirSerializer.OutputFormat.BEAUTIFIED,
+            XirSerializer.SyntaxMode.CANONICAL
         );
 
         serializer.setDocumentLocator(null);

@@ -1,5 +1,6 @@
 package name.jurgenei.xir;
 
+import name.jurgenei.xir.XirReader;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xml.sax.DTDHandler;
@@ -85,24 +86,24 @@ public class XirReaderTest {
 
     @Test
     public void parsesFromCharacterByteAndSystemIdSources() throws Exception {
-        String xir = "(. (! \"c\") (book { id \"b1\" } (title \"XML\")))";
+        String sexpr = "(. (! \"c\") (book { id \"b1\" } (title \"XML\")))";
 
         XirReader fromChars = new XirReader();
         RecordingHandler charsHandler = new RecordingHandler();
         fromChars.setContentHandler(charsHandler);
         fromChars.setProperty("http://xml.org/sax/properties/lexical-handler", charsHandler);
-        fromChars.parse(new InputSource(new StringReader(xir)));
+        fromChars.parse(new InputSource(new StringReader(sexpr)));
         Assert.assertTrue(charsHandler.sawStartBook);
         Assert.assertTrue(charsHandler.sawComment);
 
         XirReader fromBytes = new XirReader();
         RecordingHandler bytesHandler = new RecordingHandler();
         fromBytes.setContentHandler(bytesHandler);
-        fromBytes.parse(new InputSource(new ByteArrayInputStream(xir.getBytes(StandardCharsets.UTF_8))));
+        fromBytes.parse(new InputSource(new ByteArrayInputStream(sexpr.getBytes(StandardCharsets.UTF_8))));
         Assert.assertTrue(bytesHandler.sawStartBook);
 
-        File temp = File.createTempFile("xir-reader", ".xir");
-        Files.writeString(temp.toPath(), xir, StandardCharsets.UTF_8);
+        File temp = File.createTempFile("sexpr-reader", ".sexpr");
+        Files.writeString(temp.toPath(), sexpr, StandardCharsets.UTF_8);
         temp.deleteOnExit();
 
         XirReader fromSystemId = new XirReader();

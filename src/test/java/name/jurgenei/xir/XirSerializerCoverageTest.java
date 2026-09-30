@@ -1,5 +1,7 @@
 package name.jurgenei.xir;
 
+import name.jurgenei.xir.XirParser;
+import name.jurgenei.xir.XirSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,8 +23,8 @@ public class XirSerializerCoverageTest {
         StringWriter writer = new StringWriter();
         XirSerializer serializer = new XirSerializer(
             writer,
-            name.jurgenei.xir.XirSerializer.OutputFormat.BEAUTIFIED,
-            name.jurgenei.xir.XirSerializer.SyntaxMode.LEGACY
+            XirSerializer.OutputFormat.BEAUTIFIED,
+            XirSerializer.SyntaxMode.LEGACY
         );
 
         new XirParser().parse(new StringReader(input), serializer, serializer);
@@ -39,8 +41,8 @@ public class XirSerializerCoverageTest {
         StringWriter writer = new StringWriter();
         XirSerializer serializer = new XirSerializer(
             writer,
-            name.jurgenei.xir.XirSerializer.OutputFormat.BEAUTIFIED,
-            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
+            XirSerializer.OutputFormat.BEAUTIFIED,
+            XirSerializer.SyntaxMode.CANONICAL
         );
 
         serializer.startDocument();
@@ -54,8 +56,8 @@ public class XirSerializerCoverageTest {
         StringWriter writer = new StringWriter();
         XirSerializer serializer = new XirSerializer(
             writer,
-            name.jurgenei.xir.XirSerializer.OutputFormat.COMPACT,
-            name.jurgenei.xir.XirSerializer.SyntaxMode.CANONICAL
+            XirSerializer.OutputFormat.COMPACT,
+            XirSerializer.SyntaxMode.CANONICAL
         );
 
         serializer.startDocument();
