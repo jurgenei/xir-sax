@@ -1,15 +1,15 @@
-# S-XDM Reference Implementation Specification
+#XIR Reference Implementation Specification
 
 ## Version 0.1 Draft
-### XML/SAX ↔ Internal Model ↔ S-XDM Serializer/Parser
+### XML/SAX ↔ Internal Model ↔XIR Serializer/Parser
 
 ## 1. Purpose
 
-This document specifies the first reference implementation of S-XDM.
+This document specifies the first reference implementation ofXIR.
 
 The objective is not to implement a new XML stack.
 
-The objective is to demonstrate that S-XDM is a complete, lossless serialization of XDM.
+The objective is to demonstrate thatXIR is a complete, lossless serialization of XDM.
 
 ## 2. Scope
 
@@ -27,7 +27,7 @@ The implementation SHALL support:
 
 ## 3. Architecture
 
-XML/SAX → Internal Model → S-XDM
+XML/SAX → Internal Model → XIR
 
 S-XDM → Internal Model → XML/SAX
 
@@ -35,13 +35,13 @@ Phase 1 canonical model is implementation-defined and MUST preserve supported co
 
 ## 4. Components
 
-### S-XDM Writer
+###XIR Writer
 
-Converts internal model/events to S-XDM.
+Converts internal model/events toXIR.
 
-### S-XDM Reader
+###XIR Reader
 
-Converts S-XDM to internal model/events.
+ConvertsXIR to internal model/events.
 
 ### XML Import Layer
 
@@ -185,9 +185,9 @@ The following must roundtrip losslessly through internal model:
 
 ## 11. Success Criteria
 
-- XML → S-XDM works
-- S-XDM → XML works
-- S-XDM roundtrip fidelity proven for required constructs
+- XML →XIR works
+-XIR → XML works
+-XIR roundtrip fidelity proven for required constructs
 - Vendor-agnostic XML import/export works
 - Namespace handling works
 - Maps work

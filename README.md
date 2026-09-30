@@ -29,9 +29,9 @@ name.jurgenei:xir-sax:<version>
 
 ## Included APIs
 
-- `SExpressionParser` - parses S-expression input into SAX events
-- `SExpressionSerializer` - renders SAX events as canonical or legacy S-expression
-- `SExpressionXmlReader` - `XMLReader` facade over parser
+- `XirParser` - parses S-expression input into SAX events
+- `XirSerializer` - renders SAX events as canonical or legacy S-expression
+- `XirReader` - `XMLReader` facade over parser
 
 ## Canonical syntax excerpt
 
