@@ -61,7 +61,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
         run: |
           set -euo pipefail
-          for v in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword ORG_GRADLE_PROJECT_signingKey ORG_GRADLE_PROJECT_signingPassword ORG_GRADLE_PROJECT_signingKeyId; do
+          for v in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword ORG_GRADLE_PROJECT_signingKey ORG_GRADLE_PROJECT_signingPassword; do
             if [ -z "${!v:-}" ]; then
               echo "Required secret missing: $v"
               exit 1
