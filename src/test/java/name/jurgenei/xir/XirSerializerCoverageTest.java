@@ -149,6 +149,77 @@ public class XirSerializerCoverageTest {
         Assert.assertTrue(output.contains("[true 42 alpha]"));
     }
 
+    @Test
+    public void preservesLegacyCompactAttributeAndNamespaceBlocks() throws Exception {
+        String input = """
+            (book
+              { xmlns:m "urn:math" id "b1" }
+              (m:title "XML"))
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.COMPACT,
+            XirSerializer.SyntaxMode.LEGACY
+        );
+
+        new XirParser().parse(new StringReader(input), serializer, serializer);
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("[id \"b1\"]"));
+        Assert.assertTrue(output.contains("[ns \"m\" \"urn:math\"]"));
+    }
+
+    @Test
+    public void serializesFunctionNamespaceTypedAndStructuredEntries() throws Exception {
+        String xml = """
+            <map xmlns="http://www.w3.org/2005/xpath-functions">
+              <number key="badNum">not-a-number</number>
+              <boolean key="badBool">maybe</boolean>
+              <null key="nil">ignored</null>
+              <array key="skills">
+                <string>XSLT</string>
+                <number>12</number>
+                <boolean>true</boolean>
+                <null/>
+              </array>
+              <map key="profile">
+                <string key="name">Jurgen</string>
+              </map>
+            </map>
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.COMPACT,
+            XirSerializer.SyntaxMode.CANONICAL
+        );
+        parseXmlToSerializer(xml, serializer);
+
+        String output = writer.toString();
+        Assert.assertTrue(output, output.contains("badNum \"not-a-number\""));
+        Assert.assertTrue(output, output.contains("badBool \"maybe\""));
+        Assert.assertTrue(output, output.contains("nil null"));
+        Assert.assertTrue(output, output.contains("skills"));
+        Assert.assertTrue(output, output.contains("profile"));
+    }
+
+    @Test
+    public void defaultConstructorUsesStrictStringAutotyping() throws Exception {
+        String xml = """
+            <array xmlns="http://www.w3.org/2005/xpath-functions">
+              <string>true</string>
+              <string>42</string>
+            </array>
+            """;
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(writer);
+        parseXmlToSerializer(xml, serializer);
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("[\"true\" \"42\"]"));
+    }
+
     private void parseXmlToSerializer(String xml, XirSerializer serializer) throws Exception {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);

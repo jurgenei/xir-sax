@@ -120,6 +120,14 @@ public class XirFormatTest {
     }
 
     @Test
+    public void supportsTopLevelSequenceBlockAsNode() throws Exception {
+        String input = "[\"A\" \"B\"]";
+        RecordingHandler handler = new RecordingHandler();
+        new XirParser().parse(new StringReader(input), handler);
+        Assert.assertTrue(handler.events.stream().anyMatch(event -> event.startsWith("start:xdm:array")));
+    }
+
+    @Test
     public void serializesCanonicalCommentAndPiMapSyntaxWhenEnabled() throws Exception {
         String input = """
             (.
@@ -244,6 +252,16 @@ public class XirFormatTest {
         new XirParser().parse(new StringReader(input), serializer, serializer);
         String output = writer.toString();
         Assert.assertTrue(output.contains("(element {} {name Jurgen fullName \"Jurgen S. Hildebrand\" age 42 hasBike true})"));
+    }
+
+    @Test
+    public void supportsExplicitEmptyAssociativeDisambiguationBeforeArrayChild() throws Exception {
+        String input = "(element {} [\"A\" \"B\"])";
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(writer, XirSerializer.OutputFormat.COMPACT);
+        new XirParser().parse(new StringReader(input), serializer, serializer);
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("(element [A B])"));
     }
 
     @Test
