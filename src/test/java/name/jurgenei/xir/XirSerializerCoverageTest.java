@@ -220,6 +220,69 @@ public class XirSerializerCoverageTest {
         Assert.assertTrue(output.contains("[\"true\" \"42\"]"));
     }
 
+    @Test
+    public void rendersLegacyAttributeBlockCompact() throws Exception {
+        String xml = """
+            <book xmlns:m="urn:math" id="b1" version="1.0">
+              <m:title>XML</m:title>
+            </book>
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.COMPACT,
+            XirSerializer.SyntaxMode.LEGACY
+        );
+        parseXmlToSerializer(xml, serializer);
+
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("[id \"b1\" version \"1.0\"]"));
+    }
+
+    @Test
+    public void rendersBeautifiedAttributeAndNamespaceBlocks() throws Exception {
+        String xml = """
+            <book xmlns:m="urn:math" id="b1">
+              <m:title>XML</m:title>
+            </book>
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.BEAUTIFIED,
+            XirSerializer.SyntaxMode.LEGACY
+        );
+        parseXmlToSerializer(xml, serializer);
+
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("id \"b1\""));
+    }
+
+    @Test
+    public void handlesFnArrayWithMixedPrimitiveTypes() throws Exception {
+        String xml = """
+            <array xmlns="http://www.w3.org/2005/xpath-functions">
+              <number>42</number>
+              <boolean>true</boolean>
+              <string>text</string>
+              <null/>
+            </array>
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.COMPACT,
+            XirSerializer.SyntaxMode.CANONICAL
+        );
+        parseXmlToSerializer(xml, serializer);
+
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("[42 true text null]"));
+    }
+
     private void parseXmlToSerializer(String xml, XirSerializer serializer) throws Exception {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);

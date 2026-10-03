@@ -283,6 +283,41 @@ public class XirFormatTest {
         Assert.assertTrue(output.contains("\"Common Lisp\""));
     }
 
+    @Test
+    public void rejectsNestedMapWithoutAssociativePayloadAfterStructuredChildren() {
+        String input = "(book (child) (xdm:map \"oops\"))";
+        IOException error = Assert.assertThrows(IOException.class,
+            () -> new XirParser().parse(new StringReader(input), new DefaultHandler()));
+        Assert.assertTrue(error.getMessage().contains("xdm:map") || error.getMessage().contains("allowed only before"));
+    }
+
+    @Test
+    public void supportsMapAsTopLevelNode() throws Exception {
+        String input = """
+            (xdm:map { name Jurgen age 42 })
+            """;
+        RecordingHandler handler = new RecordingHandler();
+        new XirParser().parse(new StringReader(input), handler, handler);
+        Assert.assertTrue(handler.events.stream().anyMatch(event -> event.startsWith("start:xdm:map")));
+        Assert.assertTrue(handler.events.stream().anyMatch(event -> event.contains("name")));
+    }
+
+    @Test
+    public void supportsNestedMapWithinArray() throws Exception {
+        String input = """
+            (.
+              (xdm:array
+                [
+                  (xdm:map { name Jurgen })
+                  (xdm:map { name Alice })
+                ]))
+            """;
+        RecordingHandler handler = new RecordingHandler();
+        new XirParser().parse(new StringReader(input), handler, handler);
+        Assert.assertTrue(handler.events.stream().anyMatch(event -> event.startsWith("start:xdm:array")));
+        Assert.assertTrue(handler.events.stream().filter(event -> event.startsWith("start:xdm:map")).count() >= 2);
+    }
+
     private static final class RecordingHandler extends DefaultHandler implements LexicalHandler {
         private final List<String> events = new ArrayList<>();
 
