@@ -4,7 +4,10 @@ import name.jurgenei.xir.XirParser;
 import name.jurgenei.xir.XirSerializer;
 import org.junit.Assert;
 import org.junit.Test;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
+import javax.xml.parsers.SAXParserFactory;
 import java.io.StringReader;
 import java.io.StringWriter;
 
@@ -67,5 +70,91 @@ public class XirSerializerCoverageTest {
         String output = writer.toString();
         Assert.assertTrue(output.contains("(?target {data \"raw-data without-equals\"})"));
     }
-}
 
+    @Test
+    public void serializesXPathFunctionsMapInStrictMode() throws Exception {
+        String xml = """
+            <map xmlns="http://www.w3.org/2005/xpath-functions">
+              <string key="name">Jurgen</string>
+              <string key="fullName">Jurgen S. Hildebrand</string>
+              <number key="age">42</number>
+              <boolean key="hasBike">true</boolean>
+            </map>
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.BEAUTIFIED,
+            XirSerializer.SyntaxMode.CANONICAL,
+            XirSerializer.AutoTypingMode.STRICT_STRING
+        );
+        parseXmlToSerializer(xml, serializer);
+
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("name Jurgen"));
+        Assert.assertTrue(output.contains("fullName \"Jurgen S. Hildebrand\""));
+        Assert.assertTrue(output.contains("age 42"));
+        Assert.assertTrue(output.contains("hasBike true"));
+    }
+
+    @Test
+    public void serializesXPathFunctionsArrayAndListSynonym() throws Exception {
+        String xml = """
+            <array xmlns="http://www.w3.org/2005/xpath-functions">
+              <string>XSLT</string>
+              <string>XPath</string>
+              <string>Schematron</string>
+              <string>Java</string>
+              <string>Common Lisp</string>
+            </array>
+            """;
+
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.BEAUTIFIED,
+            XirSerializer.SyntaxMode.CANONICAL
+        );
+        parseXmlToSerializer(xml, serializer);
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("["));
+        Assert.assertTrue(output.contains("XSLT"));
+        Assert.assertTrue(output.contains("\"Common Lisp\""));
+
+        String listXml = xml.replace("<array", "<list").replace("</array>", "</list>");
+        StringWriter listWriter = new StringWriter();
+        parseXmlToSerializer(listXml, new XirSerializer(listWriter, XirSerializer.OutputFormat.COMPACT));
+        Assert.assertTrue(listWriter.toString().contains("[XSLT XPath Schematron Java \"Common Lisp\"]"));
+    }
+
+    @Test
+    public void promotesStringLexemesWhenPromoteModeEnabled() throws Exception {
+        String xml = """
+            <array xmlns="http://www.w3.org/2005/xpath-functions">
+              <string>true</string>
+              <string>42</string>
+              <string>alpha</string>
+            </array>
+            """;
+        StringWriter writer = new StringWriter();
+        XirSerializer serializer = new XirSerializer(
+            writer,
+            XirSerializer.OutputFormat.COMPACT,
+            XirSerializer.SyntaxMode.CANONICAL,
+            XirSerializer.AutoTypingMode.PROMOTE
+        );
+        parseXmlToSerializer(xml, serializer);
+        String output = writer.toString();
+        Assert.assertTrue(output.contains("[true 42 alpha]"));
+    }
+
+    private void parseXmlToSerializer(String xml, XirSerializer serializer) throws Exception {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        XMLReader reader = factory.newSAXParser().getXMLReader();
+        reader.setContentHandler(serializer);
+        reader.setProperty("http://xml.org/sax/properties/lexical-handler", serializer);
+        reader.parse(new InputSource(new StringReader(xml)));
+    }
+}

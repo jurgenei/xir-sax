@@ -114,13 +114,13 @@ Emits XML using standard SAX/JAXP transformer/serializer pipeline.
 ### Maps
 
 ```lisp
-(xdm:map { name "John" age 42 })
+{ name John age 42 }
 ```
 
 ### Arrays
 
 ```lisp
-(xdm:array [ "A" "B" "C" ])
+[ A B C ]
 ```
 
 ## 6. Disambiguation Rules
@@ -130,11 +130,6 @@ Emits XML using standard SAX/JAXP transformer/serializer pipeline.
 - `(! "text")` denotes comment node.
 - `(?target { ... })` denotes processing instruction node.
 
-Reserved typed heads for non-element XDM structures:
-
-- `(xdm:map { key value ... })` denotes XDM map.
-- `(xdm:array [ item ... ])` denotes XDM array.
-
 Container token classes:
 
 - `{ ... }` is associative payload container.
@@ -142,9 +137,28 @@ Container token classes:
 
 Therefore:
 
-- `(map ...)` is always XML element named `map`.
-- `(array ...)` is always XML element named `array`.
-- XDM map/array MUST use `xdm:map`/`xdm:array` heads.
+- `{...}` denotes XDM map value.
+- `[...]` denotes XDM sequence/array value.
+- `(map ...)` and `(array ...)` remain XML elements unless they come from XPath Functions XML namespace during SAX/XML interop.
+- Legacy wrapper syntax `(xdm:map {...})` and `(xdm:array [...])` may be accepted for compatibility parsing.
+- When first child of element is map value, explicit empty attrs block may be used for disambiguation:
+  - `(element {} { key value })`
+
+## 6.1 String token rendering and autotyping
+
+- Serializer may render string values without quotes when token is safe and single-word.
+- Multi-word and unsafe-token strings remain quoted.
+- Autotyping mode:
+  - `STRICT_STRING` (default): string lexical booleans/numbers remain string semantics.
+  - `PROMOTE`: string lexical booleans/numbers may be emitted as unquoted promoted tokens.
+
+## 6.2 XPath Functions XML namespace bridge
+
+For `http://www.w3.org/2005/xpath-functions` SAX/XML interop:
+
+- `map` -> XIR map value `{...}`
+- `array` and `list` -> XIR sequence value `[...]`
+- value nodes: `string`, `number`, `boolean` (and optional `null`) map to corresponding XIR scalar rendering rules.
 
 ## 7. Parsing Model
 

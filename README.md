@@ -47,9 +47,17 @@ Examples:
 - `(book (title "XML"))`
 - `(book { id "b1" xmlns:m "urn:math" } (m:title "XML"))`
 - `(. { version "1.0" encoding "UTF-8" } (book))`
-- `(xdm:map { name "John" age 42 })`
-- `(xdm:array [ "A" "B" "C" ])`
+- `{ name John age 42 }`
+- `[ A B C ]`
 - `(xs:boolean true)`
+
+Notes:
+
+- Bare `{...}` and `[...]` are canonical map/sequence values.
+- Legacy `(xdm:map ...)` / `(xdm:array ...)` input is still accepted by parser for compatibility.
+- To disambiguate element with first child map, use explicit empty attrs block: `(element {} { key value })`.
+- XML in `http://www.w3.org/2005/xpath-functions` (`map`, `array`, `list`, `string`, `number`, `boolean`) is recognized in SAX serialization path.
+- `XirSerializer` autotyping mode defaults to strict-string and supports optional promote mode.
 
 ## Run tests
 
