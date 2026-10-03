@@ -100,40 +100,6 @@ Required Java version: **21+**
 - `release.yml` publishes signed artifacts using Sonatype Central Publisher API
 - `dependabot.yml` enables weekly updates for Gradle and GitHub Actions
 
-## Maven Central publishing
-
-### Local release prereqs
-
-1. Maven Central credentials (`mavenCentralUsername`, `mavenCentralPassword`) in `~/.gradle/gradle.properties`
-2. GPG key installed locally (`gpg --list-secret-keys` shows signing key)
-3. Project version without `-SNAPSHOT`
-
-Example `~/.gradle/gradle.properties`:
-
-```properties
-mavenCentralUsername=YOUR_MAVEN_CENTRAL_TOKEN_USERNAME
-mavenCentralPassword=YOUR_MAVEN_CENTRAL_TOKEN_PASSWORD
-signingKey=YOUR_ASCII_ARMORED_PRIVATE_KEY
-signingPassword=YOUR_SIGNING_KEY_PASSPHRASE
-signingKeyId=YOUR_GPG_KEY_ID
-```
-
-Publish:
-
-```bash
-./gradlew clean packageCentralBundle
-```
-
-### CI release secrets
-
-Configure repository secrets for `release.yml`:
-
-- `MAVEN_CENTRAL_USERNAME`
-- `MAVEN_CENTRAL_PASSWORD`
-- `SIGNING_KEY` (ASCII-armored private key)
-- `SIGNING_PASSWORD`
-- `SIGNING_KEY_ID` (optional)
-
 ## License
 
 [MIT](LICENSE)
