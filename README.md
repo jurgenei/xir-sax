@@ -47,9 +47,17 @@ Examples:
 - `(book (title "XML"))`
 - `(book { id "b1" xmlns:m "urn:math" } (m:title "XML"))`
 - `(. { version "1.0" encoding "UTF-8" } (book))`
-- `(xdm:map { name "John" age 42 })`
-- `(xdm:array [ "A" "B" "C" ])`
+- `{ name John age 42 }`
+- `[ A B C ]`
 - `(xs:boolean true)`
+
+Notes:
+
+- Bare `{...}` and `[...]` are canonical map/sequence values.
+- Legacy `(xdm:map ...)` / `(xdm:array ...)` input is still accepted by parser for compatibility.
+- To disambiguate element with first child map, use explicit empty attrs block: `(element {} { key value })`.
+- XML in `http://www.w3.org/2005/xpath-functions` (`map`, `array`, `list`, `string`, `number`, `boolean`) is recognized in SAX serialization path.
+- `XirSerializer` autotyping mode defaults to strict-string and supports optional promote mode.
 
 ## Run tests
 
@@ -91,40 +99,6 @@ Required Java version: **21+**
 - `spotbugs-security.yml` runs SpotBugs + FindSecBugs and uploads report
 - `release.yml` publishes signed artifacts using Sonatype Central Publisher API
 - `dependabot.yml` enables weekly updates for Gradle and GitHub Actions
-
-## Maven Central publishing
-
-### Local release prereqs
-
-1. Maven Central credentials (`mavenCentralUsername`, `mavenCentralPassword`) in `~/.gradle/gradle.properties`
-2. GPG key installed locally (`gpg --list-secret-keys` shows signing key)
-3. Project version without `-SNAPSHOT`
-
-Example `~/.gradle/gradle.properties`:
-
-```properties
-mavenCentralUsername=YOUR_MAVEN_CENTRAL_TOKEN_USERNAME
-mavenCentralPassword=YOUR_MAVEN_CENTRAL_TOKEN_PASSWORD
-signingKey=YOUR_ASCII_ARMORED_PRIVATE_KEY
-signingPassword=YOUR_SIGNING_KEY_PASSPHRASE
-signingKeyId=YOUR_GPG_KEY_ID
-```
-
-Publish:
-
-```bash
-./gradlew clean packageCentralBundle
-```
-
-### CI release secrets
-
-Configure repository secrets for `release.yml`:
-
-- `MAVEN_CENTRAL_USERNAME`
-- `MAVEN_CENTRAL_PASSWORD`
-- `SIGNING_KEY` (ASCII-armored private key)
-- `SIGNING_PASSWORD`
-- `SIGNING_KEY_ID` (optional)
 
 ## License
 

@@ -19,12 +19,14 @@ import java.util.Map;
  * SAX content handler that writes bracket-based S-expression representation.
  */
 public final class XirSerializer implements ContentHandler, LexicalHandler {
+    private static final String XPATH_FUNCTIONS_NS = "http://www.w3.org/2005/xpath-functions";
     private final Writer writer;
     private final Deque<NodeFrame> stack = new ArrayDeque<>();
     private final List<NamespaceDecl> pendingNamespaceDeclarations = new ArrayList<>();
     private final List<DocNode> documentNodes = new ArrayList<>();
     private final OutputFormat format;
     private final SyntaxMode syntaxMode;
+    private final AutoTypingMode autoTypingMode;
 
     /**
      * Rendering mode for serialized S-expression output.
@@ -47,12 +49,22 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
     }
 
     /**
+     * Controls how XML fn:string values are rendered when converted to XIR tokens.
+     */
+    public enum AutoTypingMode {
+        /** Preserve fn:string lexical booleans/numbers as quoted strings. */
+        STRICT_STRING,
+        /** Promote fn:string lexical booleans/numbers to unquoted typed-like tokens. */
+        PROMOTE
+    }
+
+    /**
      * Creates serializer using {@link OutputFormat#COMPACT} mode.
      *
      * @param writer destination writer
      */
     public XirSerializer(Writer writer) {
-        this(writer, OutputFormat.COMPACT, SyntaxMode.CANONICAL);
+        this(writer, OutputFormat.COMPACT, SyntaxMode.CANONICAL, AutoTypingMode.STRICT_STRING);
     }
 
     /**
@@ -62,7 +74,7 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
      * @param format requested rendering mode; defaults to compact when {@code null}
      */
     public XirSerializer(Writer writer, OutputFormat format) {
-        this(writer, format, SyntaxMode.CANONICAL);
+        this(writer, format, SyntaxMode.CANONICAL, AutoTypingMode.STRICT_STRING);
     }
 
     /**
@@ -73,9 +85,22 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
      * @param syntaxMode syntax compatibility mode
      */
     public XirSerializer(Writer writer, OutputFormat format, SyntaxMode syntaxMode) {
+        this(writer, format, syntaxMode, AutoTypingMode.STRICT_STRING);
+    }
+
+    /**
+     * Creates serializer with explicit output format, syntax, and autotyping mode.
+     *
+     * @param writer destination writer
+     * @param format rendering mode
+     * @param syntaxMode syntax compatibility mode
+     * @param autoTypingMode autotyping mode for fn:string lexical values
+     */
+    public XirSerializer(Writer writer, OutputFormat format, SyntaxMode syntaxMode, AutoTypingMode autoTypingMode) {
         this.writer = writer;
         this.format = format == null ? OutputFormat.COMPACT : format;
         this.syntaxMode = syntaxMode == null ? SyntaxMode.CANONICAL : syntaxMode;
+        this.autoTypingMode = autoTypingMode == null ? AutoTypingMode.STRICT_STRING : autoTypingMode;
     }
 
     @Override
@@ -120,7 +145,9 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes atts) {
-        NodeKind kind = detectNodeKind(uri, localName, qName);
+        NodeKind parentKind = stack.isEmpty() ? null : stack.peek().kind;
+        String effectiveLocalName = normalizedLocalName(localName, qName);
+        NodeKind kind = detectNodeKind(uri, localName, qName, atts, parentKind);
         NodeFrame frame = new NodeFrame(kind);
 
         if (kind == NodeKind.ELEMENT) {
@@ -139,6 +166,9 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
             if (frame.entryKey == null || frame.entryKey.isBlank()) {
                 frame.entryKey = atts.getValue("key");
             }
+            frame.valueType = fnValueType(uri, effectiveLocalName);
+        } else if (kind == NodeKind.ITEM) {
+            frame.valueType = fnValueType(uri, effectiveLocalName);
         } else if (kind == NodeKind.LITERAL) {
             frame.literalValue = firstAttribute(atts, "value");
             frame.literalQuoted = Boolean.parseBoolean(firstAttribute(atts, "quoted"));
@@ -303,6 +333,9 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
                 sb.append(' ').append(renderNamespaceBlockCompact(frame.namespaceDeclarations));
             }
         }
+        if (shouldEmitDisambiguationBlock(frame)) {
+            sb.append(" {}");
+        }
         for (Child child : frame.children) {
             sb.append(' ').append(renderChildCompact(child, depth + 1));
         }
@@ -336,6 +369,10 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
             if (!frame.namespaceDeclarations.isEmpty()) {
                 sb.append('\n').append(renderNamespaceBlockBeautified(frame.namespaceDeclarations, depth + 1));
             }
+        }
+        if (shouldEmitDisambiguationBlock(frame)) {
+            sb.append('\n').append(indent(depth + 1)).append("{}");
+            hasBlocks = true;
         }
 
         if (!hasStructuredChildren && hasChildren) {
@@ -481,13 +518,9 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
 
     private String renderMap(NodeFrame frame, int depth) {
         if (format == OutputFormat.BEAUTIFIED) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(indent(depth)).append("(xdm:map");
-            sb.append('\n').append(renderMapPayloadBeautified(frame, depth + 1));
-            sb.append(')');
-            return sb.toString();
+            return renderMapPayloadBeautified(frame, depth);
         }
-        return "(xdm:map " + renderMapPayloadCompact(frame, depth + 1) + ')';
+        return renderMapPayloadCompact(frame, depth);
     }
 
     private String renderMapPayloadCompact(NodeFrame frame, int depth) {
@@ -530,13 +563,9 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
 
     private String renderArray(NodeFrame frame, int depth) {
         if (format == OutputFormat.BEAUTIFIED) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(indent(depth)).append("(xdm:array");
-            sb.append('\n').append(renderArrayPayloadBeautified(frame, depth + 1));
-            sb.append(')');
-            return sb.toString();
+            return renderArrayPayloadBeautified(frame, depth);
         }
-        return "(xdm:array " + renderArrayPayloadCompact(frame, depth + 1) + ')';
+        return renderArrayPayloadCompact(frame, depth);
     }
 
     private String renderArrayPayloadCompact(NodeFrame frame, int depth) {
@@ -578,15 +607,15 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
     }
 
     private String renderEntryValue(NodeFrame entry, int depth) {
+        if (entry.valueType != null) {
+            return renderFnTypedValue(collectText(entry.children), entry.valueType);
+        }
         for (Child child : entry.children) {
             if (child.node != null) {
                 return renderNode(child.node, depth);
             }
-            if (child.text != null) {
-                return quote(child.text);
-            }
         }
-        return quote("");
+        return renderStringLiteral(collectText(entry.children), true);
     }
 
     private String renderItem(NodeFrame frame, int depth) {
@@ -594,15 +623,15 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
     }
 
     private String renderItemValue(NodeFrame item, int depth) {
+        if (item.valueType != null) {
+            return renderFnTypedValue(collectText(item.children), item.valueType);
+        }
         for (Child child : item.children) {
             if (child.node != null) {
                 return renderNode(child.node, depth);
             }
-            if (child.text != null) {
-                return quote(child.text);
-            }
         }
-        return quote("");
+        return renderStringLiteral(collectText(item.children), true);
     }
 
     private String renderTypedAtomic(NodeFrame frame) {
@@ -612,7 +641,26 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
 
     private String renderLiteral(String value, boolean quoted) {
         String safe = value == null ? "" : value;
-        return quoted ? quote(safe) : safe;
+        if (!quoted) {
+            return safe;
+        }
+        return renderStringLiteral(safe, true);
+    }
+
+    private String renderStringLiteral(String value, boolean fromStringDomain) {
+        String safe = value == null ? "" : value;
+        if (isSafeUnquotedToken(safe)) {
+            if (!fromStringDomain) {
+                return safe;
+            }
+            if (autoTypingMode == AutoTypingMode.PROMOTE) {
+                return safe;
+            }
+            if (!isBooleanLexeme(safe) && !isNumericLexeme(safe)) {
+                return safe;
+            }
+        }
+        return quote(safe);
     }
 
     private String renderComment(String value) {
@@ -717,16 +765,39 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
         return '"' + escaped + '"';
     }
 
-    private NodeKind detectNodeKind(String uri, String localName, String qName) {
-        String name = localName;
-        if (name == null || name.isBlank()) {
-            name = qName;
-            int colon = name == null ? -1 : name.indexOf(':');
-            if (colon >= 0 && colon + 1 < name.length()) {
-                name = name.substring(colon + 1);
+    private NodeKind detectNodeKind(String uri, String localName, String qName, Attributes atts, NodeKind parentKind) {
+        String name = normalizedLocalName(localName, qName);
+        String effectiveUri = uri == null ? "" : uri;
+        if (XPATH_FUNCTIONS_NS.equals(effectiveUri)) {
+            boolean keyed = hasKeyAttribute(atts);
+            if ("map".equals(name)) {
+                if (parentKind == NodeKind.MAP && keyed) {
+                    return NodeKind.ENTRY;
+                }
+                if (parentKind == NodeKind.ARRAY) {
+                    return NodeKind.ITEM;
+                }
+                return NodeKind.MAP;
+            }
+            if ("array".equals(name) || "list".equals(name)) {
+                if (parentKind == NodeKind.MAP && keyed) {
+                    return NodeKind.ENTRY;
+                }
+                if (parentKind == NodeKind.ARRAY) {
+                    return NodeKind.ITEM;
+                }
+                return NodeKind.ARRAY;
+            }
+            if (isFnPrimitiveLocal(name)) {
+                if (parentKind == NodeKind.MAP && keyed) {
+                    return NodeKind.ENTRY;
+                }
+                if (parentKind == NodeKind.ARRAY) {
+                    return NodeKind.ITEM;
+                }
+                return NodeKind.LITERAL;
             }
         }
-        String effectiveUri = uri == null ? "" : uri;
         if (XirParser.INTERNAL_XDM_URI.equals(effectiveUri)) {
             return internalKindByLocal(name);
         }
@@ -769,6 +840,120 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
         return atts.getValue(key);
     }
 
+    private String normalizedLocalName(String localName, String qName) {
+        String name = localName;
+        if (name == null || name.isBlank()) {
+            name = qName;
+            int colon = name == null ? -1 : name.indexOf(':');
+            if (colon >= 0 && colon + 1 < name.length()) {
+                name = name.substring(colon + 1);
+            }
+        }
+        return name == null ? "" : name;
+    }
+
+    private boolean hasKeyAttribute(Attributes atts) {
+        String key = atts.getValue("", "key");
+        if (key == null) {
+            key = atts.getValue("key");
+        }
+        return key != null && !key.isBlank();
+    }
+
+    private boolean isFnPrimitiveLocal(String localName) {
+        return "string".equals(localName)
+            || "number".equals(localName)
+            || "boolean".equals(localName)
+            || "null".equals(localName);
+    }
+
+    private String fnValueType(String uri, String localName) {
+        if (!XPATH_FUNCTIONS_NS.equals(uri == null ? "" : uri)) {
+            return null;
+        }
+        return switch (localName) {
+            case "string" -> "string";
+            case "number" -> "number";
+            case "boolean" -> "boolean";
+            case "null" -> "null";
+            default -> null;
+        };
+    }
+
+    private String collectText(List<Child> children) {
+        StringBuilder sb = new StringBuilder();
+        for (Child child : children) {
+            if (child.text != null) {
+                sb.append(child.text);
+            }
+        }
+        return sb.toString();
+    }
+
+    private String renderFnTypedValue(String rawText, String valueType) {
+        String value = rawText == null ? "" : rawText;
+        return switch (valueType) {
+            case "number" -> isNumericLexeme(value) ? value : quote(value);
+            case "boolean" -> isBooleanLexeme(value) ? value : quote(value);
+            case "null" -> "null";
+            case "string" -> renderStringLiteral(value, true);
+            default -> renderStringLiteral(value, true);
+        };
+    }
+
+    private boolean shouldEmitDisambiguationBlock(NodeFrame frame) {
+        if (syntaxMode != SyntaxMode.CANONICAL) {
+            return false;
+        }
+        if (!frame.attributes.isEmpty() || !frame.namespaceDeclarations.isEmpty()) {
+            return false;
+        }
+        if (frame.children.isEmpty()) {
+            return false;
+        }
+        Child first = frame.children.getFirst();
+        return first.node != null && first.node.kind == NodeKind.MAP;
+    }
+
+    private boolean isSafeUnquotedToken(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (Character.isWhitespace(ch)
+                || ch == '('
+                || ch == ')'
+                || ch == '{'
+                || ch == '}'
+                || ch == '['
+                || ch == ']'
+                || ch == '"'
+                || ch == ';'
+                || ch == '\\'
+                || ch == '=') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isBooleanLexeme(String value) {
+        return "true".equals(value) || "false".equals(value);
+    }
+
+    private boolean isNumericLexeme(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        try {
+            Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+
     private enum NodeKind {
         ELEMENT,
         MAP,
@@ -784,6 +969,7 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
         private final NodeKind kind;
         private String name;
         private String entryKey;
+        private String valueType;
         private String literalValue;
         private boolean literalQuoted;
         private String atomicType;
@@ -932,5 +1118,3 @@ public final class XirSerializer implements ContentHandler, LexicalHandler {
         }
     }
 }
-
-

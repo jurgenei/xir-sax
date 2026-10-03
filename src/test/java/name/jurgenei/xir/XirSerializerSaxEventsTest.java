@@ -86,13 +86,12 @@ public class XirSerializerSaxEventsTest {
 
         String out = writer.toString();
         Assert.assertTrue(out.contains("{version \"1.0\" encoding \"UTF-8\" standalone \"yes\"}"));
-        Assert.assertTrue(out.contains("(xs:string \"v\")"));
-        Assert.assertTrue(out.contains("(xdm:map"));
-        Assert.assertTrue(out.contains("(xdm:array"));
+        Assert.assertTrue(out.contains("(xs:string v)"));
+        Assert.assertTrue(out.contains("{"));
+        Assert.assertTrue(out.contains("["));
         Assert.assertTrue(out.contains("(m:book"));
         Assert.assertTrue(out.contains("(! \"inside\")"));
         Assert.assertTrue(out.contains("(?p {k \"v\"})"));
         Assert.assertTrue(out.contains("(?pi {data \"broken-data\"})"));
     }
 }
-

@@ -92,10 +92,10 @@ public final class XirParser {
 
         char opener = cursor.peek();
         if (opener == '{') {
-            throw new IOException("Associative block must be attached to a node head at position " + cursor.position());
+            return parseMap(cursor);
         }
         if (opener == '[') {
-            throw new IOException("Sequence block must be wrapped in (xdm:array [...]) at position " + cursor.position());
+            return parseArray(cursor);
         }
         if (opener == '"') {
             return new TextNode(cursor.readString());
@@ -142,6 +142,7 @@ public final class XirParser {
 
         ElementNode node = new ElementNode(head);
         boolean hasStructuredContent = false;
+        boolean attributeBlockConsumed = false;
         while (true) {
             cursor.skipTrivia();
             if (cursor.isEof()) {
@@ -159,17 +160,26 @@ public final class XirParser {
                 continue;
             }
             if (ch == '[') {
-                throw new IOException("Sequence block must be wrapped in (xdm:array [...]) at position " + cursor.position());
+                node.children.add(parseArray(cursor));
+                hasStructuredContent = true;
+                continue;
             }
             if (ch == '{') {
                 if (hasStructuredContent) {
                     throw new IOException("Associative block in element body allowed only before child nodes at position " + cursor.position());
                 }
                 MapNode map = parseMap(cursor);
-                if (!hasStructuredContent && isAttributeNamespaceBlock(map)) {
+                if (!attributeBlockConsumed && canBeAttributeNamespaceBlock(map)) {
+                    if (map.entries.isEmpty()) {
+                        // Explicit disambiguation marker: (element {} { ... }) or (element {} [ ... ])
+                        attributeBlockConsumed = true;
+                        continue;
+                    }
                     applyAttributeNamespaceBlock(node, map);
+                    attributeBlockConsumed = true;
                 } else {
-                    throw new IOException("Use (xdm:map {...}) for map child nodes at position " + cursor.position());
+                    node.children.add(map);
+                    hasStructuredContent = true;
                 }
                 continue;
             }
@@ -413,9 +423,9 @@ public final class XirParser {
         return new AtomicNode(symbol, false);
     }
 
-    private boolean isAttributeNamespaceBlock(MapNode map) {
+    private boolean canBeAttributeNamespaceBlock(MapNode map) {
         if (map.entries.isEmpty()) {
-            return false;
+            return true;
         }
         for (MapEntry entry : map.entries) {
             if (!(entry.value instanceof AtomicNode atomic) || !atomic.quoted) {
@@ -423,6 +433,13 @@ public final class XirParser {
             }
         }
         return true;
+    }
+
+    private boolean isAttributeNamespaceBlock(MapNode map) {
+        if (map.entries.isEmpty()) {
+            return false;
+        }
+        return canBeAttributeNamespaceBlock(map);
     }
 
     private void applyAttributeNamespaceBlock(ElementNode node, MapNode map) {
@@ -858,5 +875,4 @@ public final class XirParser {
         }
     }
 }
-
 
