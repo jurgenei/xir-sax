@@ -140,7 +140,6 @@ Therefore:
 - `{...}` denotes XDM map value.
 - `[...]` denotes XDM sequence/array value.
 - `(map ...)` and `(array ...)` remain XML elements unless they come from XPath Functions XML namespace during SAX/XML interop.
-- Legacy wrapper syntax `(xdm:map {...})` and `(xdm:array [...])` may be accepted for compatibility parsing.
 - When first child of element is map value, explicit empty attrs block may be used for disambiguation:
   - `(element {} { key value })`
 

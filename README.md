@@ -15,6 +15,18 @@
 
 SAX parser, serializer, XMLReader for bracket-based XML/XDM S-expression format.
 
+## Position in XIR spine
+
+- **Problem solved**: parse and serialize XIR deterministically for build pipelines and tool interoperability.
+- **Relation to XIR**: core runtime component for XIR language processing.
+- **Why it matters**: enables reproducible observation/derivation tooling without repeated format remapping.
+
+```text
+Structured Knowledge -> XIR -> Observation -> Derivation -> Knowledge -> Applications
+```
+
+Next repository in reading path: [xir-g4](https://github.com/jurgenei/xir-g4).
+
 ## Coordinates
 
 ```text
